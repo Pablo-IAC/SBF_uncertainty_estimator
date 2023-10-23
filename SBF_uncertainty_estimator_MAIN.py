@@ -3,6 +3,11 @@
 Descripcion: Main code of the SBF_uncertainty_estimator
 Interacts with user to acquire the inputs, then runs the SBF inference iteratively.
 Calculates the SBF uncertainty among the iterations and displays the results on terminal.
+
+The methodology applied is explained with detail in the associated A&A paper:
+Modelling of Surface Brightness Fluctuation inference. Methodology, uncertainty and recommendations.
+P. Rodríguez-Beltrán, M. Cerviño, A. Vazdekis and M. A. Beasley
+
 @author: Pablo Rodríguez Beltrán
 """
 
@@ -31,17 +36,24 @@ def get_number(prompt, case_flag):
     input_value = input(prompt)
     if is_number(input_value):
         if case_flag == 0:
-            input_value = int(float(input_value))
+            input_value = int(round(float(input_value)))
         if case_flag == 1:
             input_value = float(input_value)
-            
-        if (input_value <= 0):
-            print("ERROR: Input must be a positive and non-zero number.")
+#         print("Code input value ->", input_value)
+        if (input_value < 0):
+            print("ERROR: Input must be a positive number.")
+            print("Please, introduce properly.")
             return(get_number(prompt, case_flag))   
+        elif (input_value == 0):
+            print("ERROR: Input is (or has been rounded) to zero.")
+            print("Input must be a non-zero number.")
+            print("Please, introduce properly.") 
+            return(get_number(prompt, case_flag))         
         else:
             return input_value
     else:
         print("ERROR: Input must be a positive and non-zero number.")
+        print("Please, introduce properly.")
         return(get_number(prompt, case_flag))      
 
 def get_str(prompt):
@@ -50,8 +62,28 @@ def get_str(prompt):
         return input_value
     else:
         print("ERROR: Please use \'y\' or \'n\', not any other character.")
+        print("Please, introduce properly.")
         return(get_str(prompt))
-
+    
+def print_results():
+    print("Results obtained from the distribution of inferences.")
+    print()
+    print("Mean value of the fitted SBF [counts] = ", DN_sbf_fit_mean)
+    print("Inferior and superior values respect to the mean value (±)")
+    print("calculated from the 90% width of the fitted SBF distribution.")
+    print("Inferior [] = ", asymErr_DN[0])
+    print("Superior [] = ", asymErr_DN[1])
+    print()
+    print("Precision of the inference. Eq. 26 from the paper.") 
+    print("90% width of the fitted SBF distribution [%] = ", Delta_90)
+    print()
+    print("Quality of the fitting. Eq. 24 from the paper.")
+    print("90% percentile of the relative standard deviation of the fitting [%] = ", sigma_rel_90)
+    print()
+    print("Accuracy of the fitting. Eq. 23 from the paper.")
+    print("90% percentile of the relative error [%] = ", err_rel_90)
+    print()
+    return
 ###########################################################################################################################################
 ###########################################################################################################################################
 ###########################################################################################################################################
@@ -203,42 +235,95 @@ def perform_SBF_inference(it):
 ################################################################## USER INPUTS ############################################################
 ###########################################################################################################################################
 
-print("Hello! This program is a simple estimator of the SBF uncertainty.")
+introduction = """
+Hello! This program is a simple estimator of the SBF uncertainty based in a
+set of simulations of similar galaxies. 
+
+It creates a Monte Carlo set of mock galaxies where a known fluctuation
+is introduced. Then, such fluctuation is fitted through the SBF inference 
+methodology. At last, outcomes from the distribution of results are displayed.
+
+The output results provided are:
+    - The mean value of the fitted SBF from the simulation set.
+    - The precision of the inference (90% width of the fitted SBF distribution).
+    - The quality of the fitting (90% percentile of the standard deviation 
+        of the fitting). 
+    - The accuracy of the fitting (90% percentile of the relative error).
+
+For the mock galaxy creation the inputs required are:
+    - Size of the image where the galaxy will be centered.
+    - Size of the PSF as the standard deviation of a Gaussian.
+    - Sersic profile index.
+    - Effective radius of the mock galaxy.
+    - Number of counts in the effective radius of the galaxy.
+    - Number of counts of the sky background
+    - Number of counts associated to the SBF.
+    - Range of frequencies where the fitting will be performed.
+    - Number of Monte Carlo iterations.
+Distances shall be introduced in pixel units. 
+    
+Note that, if you introduce a real SBF value retrieved from the inference 
+of an actual observation, the relative error is not a measure of the accuracy 
+of the true SBF value of the galaxy, but a comparison of your inferred SBF 
+and the Monte Carlo simulations.  
+
+We acknowledge the program is a very rough estimator of the SBF uncertainty, 
+still, as an ideal laboratory, it serves as low threshold for the uncertainty, 
+then, observations will probably retrieve worse results.  
+
+The methodology applied is explained with detail in the associated A&A paper:
+Modelling of Surface Brightness Fluctuation inference. Methodology, uncertainty
+and recommendations.
+Authors: P. Rodríguez-Beltrán, M. Cerviño, A. Vazdekis and M. A. Beasley
+
+We encourage the users to adapt and modify the code in a way 
+that accomplishes their wishes!
+"""
+print(introduction)
+
 print()
+
 print("Do you want to display the considerations taken for the calculation?")
 display_flag = get_str("(y or n) = ")
   
 if display_flag == "y":
     considerations ="""
-    This code considers a Sersic profile, a fluctuation of the stellar population luminosity as a random Gaussian distribution, a flat sky, 
-    a Gaussian PSF and a random Poisson distribution for the readout noise. No GC nor background sources are considered. The code inputs are: 
-    the number of counts at the effective radius, the number of counts associated to the SBF, the sky counts, the size of the point spread 
-    function in pixels, the size of the image in pixels, the effective radius in pixels, the Sersic index and the annular mask applied in pixels too.
-    We also ask for the range of frequencies where the fitting will be performed. We recommend checking a PS image output to assure proper fitting 
-    ranges are selected. Finally, we ask for the number of Monte Carlo simulations to be done, where the randomness comes from the stellar 
-    population luminosity fluctuation and the readout noise. 
-      
-    The code returns estimations of the uncertainty according to the number simulations taken: the accuracy (the 90% percentile of the relative error) 
-    the fitting quality (the 90% percentile of the standard deviation of the fitting) and the precision (the relative 90% width of the distribution). 
-    Note that, if you introduce a real SBF value retrieved from the inference of an actual observation, the relative error is not a measure of the accuracy 
-    of the true SBF value of the galaxy, but a comparison of your inferred SBF and the Monte Carlo simulations.  
-      
-    We check for low luminosity pixels (Gal mock mask < 10 x SBF) where the modelling is not necessarily correct and warn the user if necessary.  
-    Also, we provide the mean value of the fitted SBFs. We acknowledge the program is a very rough estimator of the SBF uncertainty, 
-    still, as an ideal laboratory, it serves as low threshold for the uncertainty and  observations will probably retrieve worse results.  
-    """
+    
+The considerations for the mock galaxy are:
+
+- The mean model is based on a Sersic profile.
+- The fluctuation of the stellar population luminosity is introduced as a 
+random Gaussian distribution around the nominal number of counts at each pixel.
+- The sky is introduced as a flat background.
+- The PSF is created as a 2D Gaussian.
+- The readout noise is introduced as a random Poisson distribution. 
+- No GC nor background sources are considered. 
+- An annular mask is applied to the image.
+
+The fitting will be performed in a considered range of frequencies. 
+We recommend checking a PS image output to assure proper fitting ranges are 
+selected. 
+
+In the Monte Carlo set of simulations the randomness comes from the stellar 
+population luminosity fluctuation and the readout noise. 
+
+We check for low luminosity pixels (Gal mock mask < 10 x SBF). 
+Note that the Gaussian approximation in the SBF modelling is only valid if the
+flux of each pixel is larger than 10 times the SBF (see Cerviño et al 2008).
+In situations where this condition is not fulfilled the modelling is not 
+necessarily correct. We strongly warn the user in such case. 
+ 
+"""
     print(considerations)
 elif display_flag == "n":
     print()
  
-print("The methodology applied is explained with detail in the associated paper:")
-print("Modelling of Surface Brightness Fluctuation inference. Methodology, uncertainty and recommendations.")
-print("P. Rodríguez-Beltrán, M. Cerviño, A. Vazdekis and M. A. Beasley")
-print()
-print("We encourage the users to adapt and modify the code in a way that accomplishes their wishes.")
+print("-----------------------------------------------------------------------")
+print("BEGGINING PROGRAM: ")
+print("-----------------------------------------------------------------------")
 print()
 print("Please introduce the following inputs: ")
-print("(inputs in [px] or [px^-1] units will be forced to integer)")
+print("(inputs in [px] or [px^-1] will be FORCED to integers)")
 print()
 
 print("Size of the image where the galaxy will be centered: ")
@@ -251,8 +336,9 @@ if (R_eff_pix > tot_pix / 2):
     print("WARNING! Reff greater than image size. Program might break.")
 print()
 
-print("Size of the PSF, as three times the standard deviation of a Gaussian: ")
-PSF_radius = get_number("3 x sigma_PSF [px] = ", 0)
+print("Size of the PSF as the standard deviation of a Gaussian: ")
+PSF_radius = get_number("sigma_PSF [px] = ", 0)
+PSF_radius = int(PSF_radius * 3)
 print()
 
 print("Sersic profile index:")
@@ -260,7 +346,7 @@ n_Sersic = get_number("n = ", 1)
 b_n = 2. * n_Sersic - 0.324   # for n > 1
 print()
 
-print("Number of counts in the effective radius of the galaxy :")
+print("Number of counts in the effective radius of the galaxy:")
 DN_eff = get_number("N_Reff [counts] = ", 1)
 print()
 
@@ -272,7 +358,8 @@ print("Number of counts of the sky background:")
 sky_back = get_number("N_Sky [counts] = ", 1)
 print()
 
-print("The mask considered is annular, determined by an inner and an outer radius (r1,r2) in pixels.")
+print("The mask considered is annular, determined by an inner and an outer")
+print("radius (r1,r2) in pixels.")
 r1 = get_number("r1 [px]: ", 0)
 if (r1 > tot_pix / 2):
     print("WARNING! \'r1\' greater than image size. Program might break.")
@@ -280,11 +367,13 @@ r2 = get_number("r2 [px]: ", 0)
 if (r2 > tot_pix / 2):
     print("WARNING! \'r2\' greater than image size. Program might break.")
 if (r1 > r2):
-    print("WARNING! \'r1\' greater than \'r2\'. Program might break.") 
+    print("ERROR! \'r1\' greater than \'r2\'.")
+    exit() 
 print()
 
-print("Range of frequencies (kfit_i,kfit_f ) where the fitting will be performed.")
-print("We recommend checking a PS image output to assure proper fitting ranges are selected.")
+print("Range of frequencies (kfit_i, kfit_f) where the fitting will be performed.")
+print("We recommend checking a PS image output to assure proper fitting ranges") 
+print("are selected.")
 kfit_i = get_number("kfit_i [px^-1] = ", 0)
 if (kfit_i > tot_pix / 2):
     print("WARNING! \'kfit_i\' greater than image size. Program might break.")
@@ -292,7 +381,8 @@ kfit_f = get_number("kfit_f [px^-1] = ", 0)
 if (kfit_f > tot_pix / 2):
     print("WARNING! \'kfit_f\' greater than image size. Program might break.")
 if (kfit_i > kfit_f):
-    print("WARNING! \'kfit_i\' greater than \'kfit_f\'. Program might break.") 
+    print("ERROR! \'kfit_i\' greater than \'kfit_f\'.")
+    exit() 
 print()
 
 print("Number of Monte Carlo iterations: ")
@@ -369,8 +459,8 @@ ratio_ill_pixels_90 = np.percentile(ratio_ill_pixels_list, 90)
 ratio_below_threshold_90 = np.percentile(ratio_below_threshold_list, 90)
 
 sorted_DNsbf_fit = np.sort(DN_sbf_fit_list)
-min5_DNsbf_fit = sorted_DNsbf_fit[np.int(nIt*0.05)]
-max95_DNsbf_fit = sorted_DNsbf_fit[np.int(nIt*0.95)]
+min5_DNsbf_fit = sorted_DNsbf_fit[int(nIt*0.05)]
+max95_DNsbf_fit = sorted_DNsbf_fit[int(nIt*0.95)]
 asymErr_DN = [[DN_sbf_fit_mean-min5_DNsbf_fit], [max95_DNsbf_fit-DN_sbf_fit_mean]]
 Delta_90 = 100. * (max95_DNsbf_fit-min5_DNsbf_fit) / np.mean(DN_sbf_fit_mean)
 
@@ -380,28 +470,36 @@ Delta_90 = 100. * (max95_DNsbf_fit-min5_DNsbf_fit) / np.mean(DN_sbf_fit_mean)
 
 print("SBF uncertainty estimation completed!")
 print()
-print("Total time [s] = " ,time.time()-t0_total)
+print("Total time [s] = " , time.time()-t0_total)
 print()
-print("Results obtained from the distribution of iterated inferences.")
-print()
-print("Mean value of the fitted SBF [counts] = ", DN_sbf_fit_mean)
-print("Inferior and superior errors of the mean value of the fitted SBF [counts] = ", asymErr_DN)
-print()
-print("Precision of the inference. 90% width of the fitted SBF distribution [%] = ", Delta_90)
-print()
-print("Quality of the fitting. 90% percentile of the relative standard deviation of the fitting [%] = ", sigma_rel_90)
-print()
-print("Accuracy of the fitting. 90% percentile of the relative error [%] = ", err_rel_90)
-print()
+
 if ratio_ill_pixels_90 == 0:
-    print("Condition fullfilled: (Gal mock mask > 10 x SBF). There is enough counts in every pixel.")
+    print_results()
+    print("Condition fulfilled: (Gal mock mask > 10 x SBF).")
+    print("There are enough counts in every pixel.")
+
 elif ratio_ill_pixels_90 > 0:
-    print("WARNING! There is NOT enough counts in every pixel. Condition NOT fullfiled: (Gal mock mask < 10 x SBF).")
-    print("Your inference might be biased. The modelling is not necessarily physically correct.")
-    print("90% percentile of the ratio of ill pixels respect to the total non-masked pixels [%] = ",ratio_ill_pixels_90)
-    print("90% percentile of the ratio of the mean of pixel values below the threshold respect to the SBF value [%] = ",ratio_below_threshold_90)
+    print("WARNING!!!")
+    print("There are NOT enough counts in every pixel.")
+    print("Condition NOT fullfiled: (Gal mock mask < 10 x SBF).")
+    print("Your inference might be biased.")
+    print("The modelling is not necessarily physically correct.")
+    print()
+    print("Statistics of bad pixels:")
+    print("90% percentile of the ratio of ill pixels respect")
+    print("to the total non-masked pixels [%] = ",ratio_ill_pixels_90)
+    print("90% percentile of the ratio of the mean of pixel values")
+    print("below the threshold respect to the SBF value [%] = ",ratio_below_threshold_90)
+    
+    print()
+    print("Despite the above, do you want to check the results?")
+    illPixels_flag = get_str("(y or n) = ")
+    if illPixels_flag == "n": 
+        exit()
+    elif parallel_flag == "y":
+        print_results()
+
 else:
     print("Exception error. Negative number.")
-        
+    exit()
 plt.show()
-
