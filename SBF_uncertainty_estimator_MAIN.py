@@ -292,7 +292,40 @@ display_flag = get_str("(y or n) = ")
   
 if display_flag == "y":
     considerations ="""
+
+--------------------------------------------------------------------------------
+
+There are two main goals behind providing this code: estimating the uncertainty 
+of observationally inferred SBFs or preliminary studying how good an SBF 
+inference could be.
+
+    - In the first case we propose using the fitted SBF value inferred from an 
+    observation, along with the rest of parameters associated to the galaxy. 
+    Then, with such information the code creates a Monte Carlo set of simulated 
+    mock galaxies (following the methodology presented in this work). The code
+    fits the SBF for each one of the mock galaxies, therefore retrieving a 
+    distribution of fitted SBFs from the simulations. This distribution would
+    be a “second generation” of mock fitted SBFs respect to the original 
+    observed SBF. From this distribution of mock fitted SBFs we calculate the
+    precision and the quality of the fitting. These values serve to attribute an
+    approximated uncertainty to the originally observed SBF.
     
+    - In the second case, the code serves to preliminary study of how reliable 
+    an SBF inference would be. This is performed by introducing representative 
+    parameters for the galaxy of interest, including an estimation of what the 
+    SBF could value. We acknowledge that the actual value of the SBF is unknown, 
+    but we suggest introducing a fabricated approximation in order to predict 
+    the quality of the inference. In this sense, we introduce values of the 
+    target observation to create the mock galaxies and perform the same 
+    procedure explained above. With the uncertainty retrieved we can foresee if 
+    our object of study will be a reliable source or not. We note that in this 
+    case, the relative error (the accuracy), does serve as an indicator of the 
+    inference. Following this philosophy, the code recreates an ideal experiment, 
+    so, if the result is untrustworthy according to the simulations the 
+    observation will probably be even worse.
+
+--------------------------------------------------------------------------------
+
 The considerations for the mock galaxy are:
 
 - The mean model is based on a Sersic profile.
@@ -312,7 +345,9 @@ Note that the Gaussian approximation in the SBF modelling is only valid if the
 flux of each pixel is larger than 10 times the SBF (see Cerviño et al 2008).
 In situations where this condition is not fulfilled the modelling is not 
 necessarily correct. We strongly warn the user in such case. 
- 
+
+--------------------------------------------------------------------------------
+
 """
     print(considerations)
 elif display_flag == "n":
