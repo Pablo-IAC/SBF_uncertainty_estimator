@@ -21,9 +21,13 @@ that accomplishes their wishes!
 ################################################################################
 
 For the moment, no installation is necessary. Just download the code and run it.
+
 External packages ARE necessary:
-time, numpy, matplotlib.pyplot, multiprocessing, multiprocessing.Pool, tqdm.tqdm,   
-functools.partial, scipy.optimize.curve_fit, scipy.signal.fftconvolve, astropy.convolution.convolve_fft, astropy.modeling.models.Sersic2D, astropy.modeling.models.Gaussian2D, matplotlib.colors, matplotlib.patheffects
+
+time, numpy, matplotlib.pyplot, multiprocessing, multiprocessing.Pool, 
+tqdm.tqdm, functools.partial, scipy.optimize.curve_fit, scipy.signal.fftconvolve, 
+astropy.convolution.convolve_fft, astropy.modeling.models.Sersic2D, 
+astropy.modeling.models.Gaussian2D, matplotlib.colors, matplotlib.patheffects
 
 ################################################################################
 ## Usage
@@ -32,14 +36,13 @@ functools.partial, scipy.optimize.curve_fit, scipy.signal.fftconvolve, astropy.c
 '''
 python3 SBF_uncertainty_estimator_MAIN.py 
 '''
-To initiate the interaction run the main code 'SBF_uncertainty_estimator_MAIN.py' in a console. Introduce the inputs that the code requires, wait for the calculation and retrieve the outputs through console.
+to initiate the interaction. Run the main code 'SBF_uncertainty_estimator_MAIN.py' in a console. Introduce the inputs that the code requires, wait for the calculation and retrieve the outputs through console.
 
 ################################################################################
 ## Contributing
 ################################################################################
 
-Pablo R. Beltrán
-Miguel Cerviño Saavedra
+Pablo R. Beltrán, Miguel Cerviño Saavedra
 
 ################################################################################
 ## License
