@@ -69,10 +69,10 @@ def print_results():
     print("Results obtained from the distribution of inferences.")
     print()
     print("Mean value of the fitted SBF [counts] = ", DN_sbf_fit_mean)
-    print("Inferior and superior values respect to the mean value (±)")
+    print("Inferior (5%) and superior (95%) values respect to the mean value (±)")
     print("calculated from the 90% width of the fitted SBF distribution.")
-    print("Inferior [] = ", asymErr_DN[0])
-    print("Superior [] = ", asymErr_DN[1])
+    print("Inferior [counts] = ", asymErr_DN[0])
+    print("Superior [counts] = ", asymErr_DN[1])
     print()
     print("Precision of the inference. Eq. 26 from the paper.") 
     print("90% width of the fitted SBF distribution [%] = ", Delta_90)
@@ -262,6 +262,10 @@ For the mock galaxy creation the inputs required are:
     - Number of Monte Carlo iterations.
 Distances shall be introduced in pixel units. 
     
+The fitting will be performed in a considered range of frequencies. 
+We recommend checking a PS image output to assure proper fitting ranges are 
+selected. Only the non-parallel option allows displaying the results.
+    
 Note that, if you introduce a real SBF value retrieved from the inference 
 of an actual observation, the relative error is not a measure of the accuracy 
 of the true SBF value of the galaxy, but a comparison of your inferred SBF 
@@ -299,10 +303,6 @@ random Gaussian distribution around the nominal number of counts at each pixel.
 - The readout noise is introduced as a random Poisson distribution. 
 - No GC nor background sources are considered. 
 - An annular mask is applied to the image.
-
-The fitting will be performed in a considered range of frequencies. 
-We recommend checking a PS image output to assure proper fitting ranges are 
-selected. 
 
 In the Monte Carlo set of simulations the randomness comes from the stellar 
 population luminosity fluctuation and the readout noise. 
@@ -389,13 +389,14 @@ print("Number of Monte Carlo iterations: ")
 nIt = get_number("N_it = ", 0)
 print()
 
-print("Display radial power spectrum image of the final inference: ")
-display_flag = get_str("(y or n) = ")
-print()
-
-print("Run in parallel (parallel option does not display the images): ")
+print("Run in parallel? (parallel option does not display the images) ")
 parallel_flag = get_str("(y or n) = ")
 print()
+
+if parallel_flag == "n":
+    print("Plot mock galaxy and radial power spectrum of the final inference? ")
+    display_flag = get_str("(y or n) = ")
+    print()
 
 print("Calculating... (depending on the size it might take some time)")
 
