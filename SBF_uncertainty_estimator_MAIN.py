@@ -40,6 +40,7 @@ def get_number(prompt, case_flag):
         if case_flag == 1:
             input_value = float(input_value)
 #         print("Code input value ->", input_value)
+        print(input_value) 
         if (input_value < 0):
             print("ERROR: Input must be a positive number.")
             print("Please, introduce properly.")
@@ -53,6 +54,7 @@ def get_number(prompt, case_flag):
             return input_value
     else:
         print("ERROR: Input must be a positive and non-zero number.")
+        print("Operational symbols such as \'+,-,*,/,...\' are not allowed either.")
         print("Please, introduce properly.")
         return(get_number(prompt, case_flag))      
 
@@ -133,7 +135,7 @@ def perform_SBF_inference(it):
     
     ##### Extracting the fluctuation image:
     ##### Subtracting the sky background
-    gal_mock_NoSky = gal_mock - sky_back 
+    gal_mock_NoSky = gal_mock - sky_back
     ##### Subtracting the mean model convolved with the PSF, this is the fluctuation image
     gal_mockFluc = gal_mock_NoSky - galModel_meanPSF   
     ##### Normalizing the fluctuation image
@@ -153,7 +155,8 @@ def perform_SBF_inference(it):
     gal_mockFluc_norm_mask = gal_mockFluc_norm * mask
     ##### Appliying the mask to the modelled readout noise
     readout_noise_model_norm_mask = readout_noise_model_norm * mask
-
+    ##### Appliying the mask to the mock galaxy image without sky background
+    gal_mock_NoSky_mask = gal_mock_NoSky * mask
     ####################################################### MOVING INTO FOURIER SPACE ######################################################
     
     ##### Azimuthally averaged power spectrum of the galaxy fluctuation
@@ -201,7 +204,7 @@ def perform_SBF_inference(it):
     ################################################ CHECKING CONDITION FOR LOW FLUX PIXELS #############################################
     
     ##### Apply the threshold and get a mask for pixels below the threshold
-    below_threshold_mask = (gal_mock < 10. * DN_sbf).astype(int) * mask
+    below_threshold_mask = (gal_mock_NoSky_mask < 10. * DN_sbf).astype(int) * mask
     ##### Count the number of non-masked pixels
     num_pixels_mask = np.count_nonzero(gal_mock_mask)
     ##### Count the number of pixels below the threshold
@@ -337,10 +340,14 @@ random Gaussian distribution around the nominal number of counts at each pixel.
 - No GC nor background sources are considered. 
 - An annular mask is applied to the image.
 
+Some inputs are forced to integer, such as: the size of the image, the mask 
+radii, the range of frequencies where the fitting is performed and the number 
+of Monte Carlo iterations.
+
 In the Monte Carlo set of simulations the randomness comes from the stellar 
 population luminosity fluctuation and the readout noise. 
 
-We check for low luminosity pixels (Gal mock mask < 10 x SBF). 
+We check for low luminosity pixels (Gal mock masked - sky masked < 10 x SBF). 
 Note that the Gaussian approximation in the SBF modelling is only valid if the
 flux of each pixel is larger than 10 times the SBF (see Cerviño et al 2008).
 In situations where this condition is not fulfilled the modelling is not 
@@ -358,7 +365,6 @@ print("BEGGINING PROGRAM: ")
 print("-----------------------------------------------------------------------")
 print()
 print("Please introduce the following inputs: ")
-print("(inputs in [px] or [px^-1] will be FORCED to integers)")
 print()
 
 print("Size of the image where the galaxy will be centered: ")
@@ -366,14 +372,14 @@ tot_pix = get_number("n pix [px] = ", 0)
 print()
 
 print("Effective radius of the mock galaxy in pixels: ") # ojo que debe ser menor que la mitad de npix
-R_eff_pix = get_number("Reff [px] = ", 0)
+R_eff_pix = get_number("Reff [px] = ", 1)
 if (R_eff_pix > tot_pix / 2):
     print("WARNING! Reff greater than image size. Program might break.")
 print()
 
 print("Size of the PSF as the standard deviation of a Gaussian: ")
-PSF_radius = get_number("sigma_PSF [px] = ", 0)
-PSF_radius = int(PSF_radius * 3)
+PSF_radius = get_number("sigma_PSF [px] = ", 1)
+PSF_radius = PSF_radius * 3.
 print()
 
 print("Sersic profile index:")
@@ -511,13 +517,13 @@ print()
 
 if ratio_ill_pixels_90 == 0:
     print_results()
-    print("Condition fulfilled: (Gal mock mask > 10 x SBF).")
-    print("There are enough counts in every pixel.")
+    print("Condition fulfilled: (Gal mock masked - sky masked > 10 x SBF).")
+    print("There are enough counts in every pixel. Ended.")
 
 elif ratio_ill_pixels_90 > 0:
     print("WARNING!!!")
     print("There are NOT enough counts in every pixel.")
-    print("Condition NOT fullfiled: (Gal mock mask < 10 x SBF).")
+    print("Condition NOT fullfiled: (Gal mock masked - sky masked < 10 x SBF).")
     print("Your inference might be biased.")
     print("The modelling is not necessarily physically correct.")
     print()
@@ -534,7 +540,7 @@ elif ratio_ill_pixels_90 > 0:
         exit()
     elif parallel_flag == "y":
         print_results()
-
+    print('Ended.')
 else:
     print("Exception error. Negative number.")
     exit()

@@ -81,8 +81,8 @@ def plot_gal(galModel_mean, gal_mock, gal_mockFluc_norm_mask, rad_PS_gal_mockFlu
     axs.vlines(x = kfit_f, ymin = -10, ymax = 10, linestyle = "dotted", color = "y")
     axs.axvspan(kfit_i, kfit_f, ymin = -10, ymax = 10, alpha=0.15, color="y")
     ratioPSFloss_k0 = rad_PS_ReSize_PSF[0]/rad_PS_Resized_PS_maskedPSF[0]
-    axs.plot(np.log10(rad_PS_gal_mockFluc_norm_mask) + np.log10(ratioPSFloss_k0), color = "b", linewidth = 2, label="$PS$(Gal$_{\mathrm{mock\;fluc\;mask}}$)$_{\mathrm{r}}$")
     axs.plot(np.log10(rad_PS_readout_noise_model_norm_mask)+np.log10(ratioPSFloss_k0), color = "c", linewidth = 2, label="$PS$($R_{\mathrm{aprox}}^{\mathrm{norm}}$$\cdot$Mask)$_{\mathrm{r}}$") # "PS$_{\mathrm{r}}$(R$_{aprox}$$\cdot$Mask)/$\sqrt{Gal_{mean}\otimes PSF}$"
+    axs.plot(np.log10(rad_PS_gal_mockFluc_norm_mask) + np.log10(ratioPSFloss_k0), color = "b", linewidth = 2, label="$PS$(Gal$_{\mathrm{mock\;fluc\;mask}}$)$_{\mathrm{r}}$")
     axs.plot(np.log10(rad_PS_Resized_PS_maskedPSF * (DN_sbf) + rad_PS_readout_noise_model_norm_mask)+np.log10(ratioPSFloss_k0), color = "r", linewidth = 3.25, label="$\\bar{N}_{real}$ $\cdot$($PS$(PSF)$\\otimes PS$(Mask))$_{\mathrm{r}}$ + $PS$($R_{\mathrm{aprox}}^{\mathrm{norm}}$ $\cdot$Mask)$_{\mathrm{r}}$")
     axs.plot(np.log10(rad_PS_Resized_PS_maskedPSF * (DN_sbf_fit) + rad_PS_readout_noise_model_norm_mask)+np.log10(ratioPSFloss_k0), color = "g", linestyle = "--", linewidth = 1.25, 
              label="$\\bar{N}_{fit}$ $\cdot$($PS$(PSF)$\\otimes PS$(Mask))$_{\mathrm{r}}$ + $PS$($R_{\mathrm{aprox}}^{\mathrm{norm}}$ $\cdot$Mask)$_{\mathrm{r}}$", path_effects=[pe.Stroke(linewidth=2.5, foreground="k"), pe.Normal()])
@@ -92,7 +92,7 @@ def plot_gal(galModel_mean, gal_mock, gal_mockFluc_norm_mask, rad_PS_gal_mockFlu
   
     ################################################
     
-    inner_ax = axs.inset_axes([0.62, 0.4, 0.27, 0.32])
+    inner_ax = axs.inset_axes([0.6, 0.4, 0.27, 0.32])
     
     inner_ax.set_xlabel("X [px]", fontsize = 10)
     inner_ax.set_ylabel("Y [px]", fontsize = 10)
