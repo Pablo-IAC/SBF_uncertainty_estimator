@@ -172,9 +172,9 @@ def perform_SBF_inference(it):
     PS_mask = PowerSpecData(mask)/(num_cols * num_rows)
     ##### Power spectrum image of the resized PSF
     ReSize_PSF = PSF2Image(ZeroMatrix, PSF)   
-    PS_PSF = PowerSpecData(ReSize_PSF) 
+    PS_ReSize_PSF = PowerSpecData(ReSize_PSF) 
     ##### Power spectrum image of the resized PSF 
-    Resized_PS_maskedPSF = convolvenorm_fft(PS_PSF, PS_mask) * num_cols * num_rows
+    Resized_PS_maskedPSF = convolvenorm_fft(PS_ReSize_PSF, PS_mask) * num_cols * num_rows
     ##### Azimuthally averaged power spectrum of the masked PSF
     rad_PS_Resized_PS_maskedPSF = radial_profile(Resized_PS_maskedPSF, [num_rows/2,num_cols/2]) 
     
@@ -185,7 +185,7 @@ def perform_SBF_inference(it):
     
     ##### Definition of the function to fit
     def sbf_to_fit(x, sbf, final_ps_sky, rad_PS_Resized_PS_maskedPSF):
-        return rad_PS_Resized_PS_maskedPSF * sbf + rad_PS_Resized_PS_maskedPSF + final_ps_sky
+        return rad_PS_Resized_PS_maskedPSF * sbf + final_ps_sky
 
     ##### Feeding known parameters to the incoming fitting, leaving the SBF as sole parameter to infer
     sbf_to_fit_re = partial(sbf_to_fit, final_ps_sky=rad_PS_readout_noise_model_norm_mask[kfit_i:kfit_f])
