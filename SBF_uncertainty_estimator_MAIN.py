@@ -40,7 +40,6 @@ def get_number(prompt, case_flag):
         if case_flag == 1:
             input_value = float(input_value)
 #         print("Code input value ->", input_value)
-        print(input_value) 
         if (input_value < 0):
             print("ERROR: Input must be a positive number.")
             print("Please, introduce properly.")
