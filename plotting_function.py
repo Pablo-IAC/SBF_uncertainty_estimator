@@ -16,8 +16,8 @@ plt.rc("lines", linewidth=1.2)   #1.5
 plt.rcParams.update({"font.size": 13})
 
 
-def plot_gal(galModel_mean, gal_mock, gal_mockFluc_norm_mask, rad_PS_gal_mockFluc_norm_mask, rad_PS_readout_noise_model_norm_mask, 
-             rad_PS_Resized_PS_maskedPSF, rad_PS_ReSize_PSF, DN_sbf, DN_sbf_fit, readout_noise_model, sky_back, R_eff_pix, kfit_i, kfit_f):
+def plot_gal(galModel_mean, gal_mock, gal_mockFluc_norm_mask, rad_PS_gal_mockFluc_norm_mask, rad_PS_instrum_noise_model_norm_mask, 
+             rad_PS_Resized_PS_maskedPSF, rad_PS_ReSize_PSF, DN_sbf, DN_sbf_fit, instrum_noise_model, sky_back, R_eff_pix, kfit_i, kfit_f):
     
     print("Plotting")
       
@@ -60,7 +60,7 @@ def plot_gal(galModel_mean, gal_mock, gal_mockFluc_norm_mask, rad_PS_gal_mockFlu
     axB.axvline(x = R_eff_pix, color = "r")
     axB.loglog(radial_profile(galModel_mean, [row_len/2, col_len/2]), label = "Gal$_{\mathrm{mean}}$", linewidth = 2)
     axB.loglog(radial_profile(gal_mock, [row_len/2, col_len/2]), label = "Gal$_{\mathrm{mock}}$", linestyle = "dotted", linewidth = 3)
-#     axB.loglog(radial_profile(readout_noise_model, [row_len/2, col_len/2])+sky_back, label = "Sky+$R_{\mathrm{aprox}}$", linestyle = "solid", linewidth = 1.5)
+#     axB.loglog(radial_profile(instrum_noise_model, [row_len/2, col_len/2])+sky_back, label = "Sky+$R_{\mathrm{aprox}}$", linestyle = "solid", linewidth = 1.5)
     axB.set_xlim([1, row_len/2])
     axB.legend(loc="best", fontsize=11)    
     
@@ -81,14 +81,14 @@ def plot_gal(galModel_mean, gal_mock, gal_mockFluc_norm_mask, rad_PS_gal_mockFlu
     axs.vlines(x = kfit_f, ymin = -10, ymax = 10, linestyle = "dotted", color = "y")
     axs.axvspan(kfit_i, kfit_f, ymin = -10, ymax = 10, alpha=0.15, color="y")
     ratioPSFloss_k0 = rad_PS_ReSize_PSF[0]/rad_PS_Resized_PS_maskedPSF[0]
-    axs.plot(np.log10(rad_PS_readout_noise_model_norm_mask)+np.log10(ratioPSFloss_k0), color = "c", linewidth = 2, label="$PS$($R_{\mathrm{aprox}}^{\mathrm{norm}}$$\cdot$Mask)$_{\mathrm{r}}$") # "PS$_{\mathrm{r}}$(R$_{aprox}$$\cdot$Mask)/$\sqrt{Gal_{mean}\otimes PSF}$"
+    axs.plot(np.log10(rad_PS_instrum_noise_model_norm_mask)+np.log10(ratioPSFloss_k0), color = "c", linewidth = 2, label="$PS$($R_{\mathrm{aprox}}^{\mathrm{norm}}$$\cdot$Mask)$_{\mathrm{r}}$") # "PS$_{\mathrm{r}}$(R$_{aprox}$$\cdot$Mask)/$\sqrt{Gal_{mean}\otimes PSF}$"
     axs.plot(np.log10(rad_PS_gal_mockFluc_norm_mask) + np.log10(ratioPSFloss_k0), color = "b", linewidth = 2, label="$PS$(Gal$_{\mathrm{mock\;fluc\;mask}}$)$_{\mathrm{r}}$")
-    axs.plot(np.log10(rad_PS_Resized_PS_maskedPSF * (DN_sbf) + rad_PS_readout_noise_model_norm_mask)+np.log10(ratioPSFloss_k0), color = "r", linewidth = 3.25, label="$\\bar{N}_{real}$ $\cdot$($PS$(PSF)$\\otimes PS$(Mask))$_{\mathrm{r}}$ + $PS$($R_{\mathrm{aprox}}^{\mathrm{norm}}$ $\cdot$Mask)$_{\mathrm{r}}$")
-    axs.plot(np.log10(rad_PS_Resized_PS_maskedPSF * (DN_sbf_fit) + rad_PS_readout_noise_model_norm_mask)+np.log10(ratioPSFloss_k0), color = "g", linestyle = "--", linewidth = 1.25, 
+    axs.plot(np.log10(rad_PS_Resized_PS_maskedPSF * (DN_sbf) + rad_PS_instrum_noise_model_norm_mask)+np.log10(ratioPSFloss_k0), color = "r", linewidth = 3.25, label="$\\bar{N}_{real}$ $\cdot$($PS$(PSF)$\\otimes PS$(Mask))$_{\mathrm{r}}$ + $PS$($R_{\mathrm{aprox}}^{\mathrm{norm}}$ $\cdot$Mask)$_{\mathrm{r}}$")
+    axs.plot(np.log10(rad_PS_Resized_PS_maskedPSF * (DN_sbf_fit) + rad_PS_instrum_noise_model_norm_mask)+np.log10(ratioPSFloss_k0), color = "g", linestyle = "--", linewidth = 1.25, 
              label="$\\bar{N}_{fit}$ $\cdot$($PS$(PSF)$\\otimes PS$(Mask))$_{\mathrm{r}}$ + $PS$($R_{\mathrm{aprox}}^{\mathrm{norm}}$ $\cdot$Mask)$_{\mathrm{r}}$", path_effects=[pe.Stroke(linewidth=2.5, foreground="k"), pe.Normal()])
     axs.legend(loc="upper right", fontsize = 11)    
     axs.set_xlim([0., row_len/2])
-    axs.set_ylim([np.mean(np.log10(rad_PS_readout_noise_model_norm_mask)+np.log10(ratioPSFloss_k0))*0.9, (np.log10(rad_PS_Resized_PS_maskedPSF * (DN_sbf) + rad_PS_readout_noise_model_norm_mask)+np.log10(ratioPSFloss_k0))[0]*1.1])
+    axs.set_ylim([np.mean(np.log10(rad_PS_instrum_noise_model_norm_mask)+np.log10(ratioPSFloss_k0))*0.9, (np.log10(rad_PS_Resized_PS_maskedPSF * (DN_sbf) + rad_PS_instrum_noise_model_norm_mask)+np.log10(ratioPSFloss_k0))[0]*1.1])
   
     ################################################
     

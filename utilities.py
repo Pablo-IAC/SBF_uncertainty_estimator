@@ -50,7 +50,7 @@ def PSF2Image(data,PSF):
     PSFnew = convolvenorm_fft_wrap(data_out, PSF)
     return PSFnew
 
-##### Adds Poissionian noise for the readout noise
+##### Adds Poissionian noise for the instrumental noise
 def AddNoise(data):
     row,col=np.shape(data)
     data_out = np.zeros((col,row))

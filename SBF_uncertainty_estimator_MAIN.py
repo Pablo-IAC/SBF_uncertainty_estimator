@@ -121,9 +121,8 @@ def perform_SBF_inference(it):
     ##### Creating and appliying the PSF
     PSF = gaussian_PSF(PSF_radius) 
     galModel_fluc_sky_PSF = convolvenorm_fft_wrap(galModel_fluc_sky, PSF) 
-    galModel_meanPSF = convolvenorm_fft_wrap(galModel_mean, PSF) 
         
-    ##### Appliying the readout noise
+    ##### Appliying the instrumental noise
     gal_mock = AddNoise(galModel_fluc_sky_PSF) 
 
     ###### This is ends the creation of the mock galaxy
@@ -136,14 +135,15 @@ def perform_SBF_inference(it):
     ##### Subtracting the sky background
     gal_mock_NoSky = gal_mock - sky_back
     ##### Subtracting the mean model convolved with the PSF, this is the fluctuation image
+    galModel_meanPSF = convolvenorm_fft_wrap(galModel_mean, PSF) 
     gal_mockFluc = gal_mock_NoSky - galModel_meanPSF   
     ##### Normalizing the fluctuation image
     gal_mockFluc_norm = gal_mockFluc / np.sqrt(galModel_meanPSF)        
     
-    ##### Modelling the readout noise
-    readout_noise_model = AddNoise(sky_back + galModel_meanPSF) - (sky_back + galModel_meanPSF)   
-    ##### Normalizing the modelled readout noise
-    readout_noise_model_norm =  readout_noise_model / np.sqrt(galModel_meanPSF) 
+    ##### Modelling the instrumental noise
+    instrum_noise_model = AddNoise(sky_back + galModel_meanPSF) - (sky_back + galModel_meanPSF)   
+    ##### Normalizing the modelled instrumental noise
+    instrum_noise_model_norm =  instrum_noise_model / np.sqrt(galModel_meanPSF) 
 
     ##### Creating and appliying the mask:
     ##### Creating an annular mask
@@ -152,8 +152,8 @@ def perform_SBF_inference(it):
     gal_mock_mask = gal_mock * mask
     ##### Appliying the mask to the normalized fluctuatiuon image
     gal_mockFluc_norm_mask = gal_mockFluc_norm * mask
-    ##### Appliying the mask to the modelled readout noise
-    readout_noise_model_norm_mask = readout_noise_model_norm * mask
+    ##### Appliying the mask to the modelled instrumental noise
+    instrum_noise_model_norm_mask = instrum_noise_model_norm * mask
     ##### Appliying the mask to the mock galaxy image without sky background
     gal_mock_NoSky_mask = gal_mock_NoSky * mask
     ####################################################### MOVING INTO FOURIER SPACE ######################################################
@@ -161,8 +161,8 @@ def perform_SBF_inference(it):
     ##### Azimuthally averaged power spectrum of the galaxy fluctuation
     rad_PS_gal_mockFluc_norm_mask = PowerSpecArray(gal_mockFluc_norm_mask)
 
-    ##### Azimuthally averaged power spectrum of the readout noise model, normalized and masked
-    rad_PS_readout_noise_model_norm_mask = PowerSpecArray(readout_noise_model_norm_mask)   
+    ##### Azimuthally averaged power spectrum of the instrumental noise model, normalized and masked
+    rad_PS_instrum_noise_model_norm_mask = PowerSpecArray(instrum_noise_model_norm_mask)   
 
     ##### Azimuthally averaged power spectrum of the mask
 #     rad_PS_mask = PowerSpecArray(mask)/(num_cols * num_rows) # Normalized   
@@ -188,7 +188,7 @@ def perform_SBF_inference(it):
         return rad_PS_Resized_PS_maskedPSF * sbf + final_ps_sky
 
     ##### Feeding known parameters to the incoming fitting, leaving the SBF as sole parameter to infer
-    sbf_to_fit_re = partial(sbf_to_fit, final_ps_sky=rad_PS_readout_noise_model_norm_mask[kfit_i:kfit_f])
+    sbf_to_fit_re = partial(sbf_to_fit, final_ps_sky=rad_PS_instrum_noise_model_norm_mask[kfit_i:kfit_f])
     sbf_to_fit_reRe = partial(sbf_to_fit_re, rad_PS_Resized_PS_maskedPSF=rad_PS_Resized_PS_maskedPSF[kfit_i:kfit_f])
     ##### Performing the fitting in the range of frequencies selected
     DN_sbf_fit, cov_DN_sbf_fit = curve_fit(f=sbf_to_fit_reRe, xdata=np.linspace(kfit_i,kfit_f,len(rad_PS_gal_mockFluc_norm_mask[kfit_i:kfit_f])), ydata=rad_PS_gal_mockFluc_norm_mask[kfit_i:kfit_f])   
@@ -224,8 +224,8 @@ def perform_SBF_inference(it):
         
     if it == nIt-1 and display_flag == "y" and parallel_flag == "n":
         from plotting_function import plot_gal
-        plot_gal(galModel_mean, gal_mock, gal_mockFluc_norm_mask, rad_PS_gal_mockFluc_norm_mask, rad_PS_readout_noise_model_norm_mask, 
-                 rad_PS_Resized_PS_maskedPSF, rad_PS_ReSize_PSF, DN_sbf, DN_sbf_fit, readout_noise_model, sky_back, R_eff_pix, kfit_i, kfit_f)                    
+        plot_gal(galModel_mean, gal_mock, gal_mockFluc_norm_mask, rad_PS_gal_mockFluc_norm_mask, rad_PS_instrum_noise_model_norm_mask, 
+                 rad_PS_Resized_PS_maskedPSF, rad_PS_ReSize_PSF, DN_sbf, DN_sbf_fit, instrum_noise_model, sky_back, R_eff_pix, kfit_i, kfit_f)                    
 
     ###########################################################################################################################################
     ###########################################################################################################################################
@@ -335,7 +335,7 @@ The considerations for the mock galaxy are:
 random Gaussian distribution around the nominal number of counts at each pixel.
 - The sky is introduced as a flat background.
 - The PSF is created as a 2D Gaussian.
-- The readout noise is introduced as a random Poisson distribution. 
+- The instrumental noise is introduced as a random Poisson distribution. 
 - No GC nor background sources are considered. 
 - An annular mask is applied to the image.
 
@@ -344,7 +344,7 @@ radii, the range of frequencies where the fitting is performed and the number
 of Monte Carlo iterations.
 
 In the Monte Carlo set of simulations the randomness comes from the stellar 
-population luminosity fluctuation and the readout noise. 
+population luminosity fluctuation and the instrumental noise. 
 
 We check for low luminosity pixels (Gal mock masked - sky masked < 10 x SBF). 
 Note that the Gaussian approximation in the SBF modelling is only valid if the
@@ -438,7 +438,8 @@ if parallel_flag == "n":
     display_flag = get_str("(y or n) = ")
     print()
 
-print("Calculating... (depending on the size it might take some time)")
+print("RUNNING... ")
+print("(Depending on the image size and number of simulations it might take some time)")
 
 ###########################################################################################################################################
 ######################################################### RUNNING THE SBF UNCERTAINTY ESTIMATOR ###########################################
@@ -537,7 +538,7 @@ elif ratio_ill_pixels_90 > 0:
     illPixels_flag = get_str("(y or n) = ")
     if illPixels_flag == "n": 
         exit()
-    elif parallel_flag == "y":
+    elif illPixels_flag == "y":
         print_results()
     print('Ended.')
 else:
