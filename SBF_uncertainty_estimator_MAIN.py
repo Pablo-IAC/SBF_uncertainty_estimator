@@ -69,7 +69,8 @@ def get_str(prompt):
 def print_results():
     print("Results obtained from the distribution of inferences.")
     print()
-    print("Mean value of the fitted SBF [counts] = ", DN_sbf_fit_mean)
+    print("Mean value of the distribution of fitted SBFs [counts] = ", DN_sbf_fit_mean)
+    print("Standard deviation of the distribution of fitted SBFs [counts] = ", DN_sbf_fit_std)
     print("Inferior (5%) and superior (95%) values respect to the mean value (±)")
     print("calculated from the 90% width of the fitted SBF distribution.")
     print("Inferior [counts] = ", asymErr_DN[0])
@@ -246,7 +247,8 @@ is introduced. Then, such fluctuation is fitted through the SBF inference
 methodology. At last, outcomes from the distribution of results are displayed.
 
 The output results provided are:
-    - The mean value of the fitted SBF from the simulation set.
+    - The mean value of the fitted SBFs from the simulation set.
+    - The standard deviation value of the fitted SBFs from the simulation set.
     - The precision of the inference (90% width of the fitted SBF distribution).
     - The quality of the fitting (90% percentile of the standard deviation 
         of the fitting). 
@@ -308,9 +310,10 @@ inference could be.
     fits the SBF for each one of the mock galaxies, therefore retrieving a 
     distribution of fitted SBFs from the simulations. This distribution would
     be a “second generation” of mock fitted SBFs respect to the original 
-    observed SBF. From this distribution of mock fitted SBFs we calculate the
-    precision and the quality of the fitting. These values serve to attribute an
-    approximated uncertainty to the originally observed SBF.
+    observed SBF. From this distribution of mock fitted SBFs we calculate the 
+    standard deviation, the precision and the quality of the fitting. 
+    These values serve to attribute an approximated uncertainty to the 
+    originally observed SBF.
     
     - In the second case, the code serves to preliminary study of how reliable 
     an SBF inference would be. This is performed by introducing representative 
@@ -495,6 +498,7 @@ print("======================")
 ###########################################################################################################################################
 
 DN_sbf_fit_mean = np.mean(DN_sbf_fit_list)
+DN_sbf_fit_std = np.std(DN_sbf_fit_list)
 sigma_rel_90 = np.percentile(sigma_rel_list, 90)
 err_rel_90 = np.percentile(err_rel_list, 90)
 ratio_ill_pixels_90 = np.percentile(ratio_ill_pixels_list, 90)
